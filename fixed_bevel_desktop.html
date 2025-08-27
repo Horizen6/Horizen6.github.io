@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen Desktop System</title>
+    <link href="https://fonts.googleapis.com/css2?family=VCR+OSD+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'VCR OSD Mono', monospace;
+            color: white;
+        }
+        
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        /* Startup Animation */
+        .startup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+        
+        .startup-bevel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://raw.githubusercontent.com/Horizen6/Horizen6.github.io/refs/heads/main/imageedit_1_5166642912.png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+            z-index: 998;
+        }
+        
+        .startup-screen {
+            position: fixed;
+            top: 80px;
+            left: 80px;
+            right: 80px;
+            bottom: 80px;
+            background: #000;
+            border-radius: 6px;
+            z-index: 997;
+        }
+        
+        .startup-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .startup-icon {
+            width: 200px;
+            height: 200px;
+            background-image: url('https://github.com/Horizen6/Horizen6.github.io/blob/main/image.png?raw=true');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: startupIcon 8s ease-in-out forwards;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+            z-index: 1000;
+            position: relative;
+        }
+        
+        @keyframes startupIcon {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            75% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.1);
+            }
+        }
+        
+        .desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2c2c2c;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+        
+        .desktop.visible {
+            opacity: 1;
+        }
+        
+        /* Bevel frame using your image */
+        .bevel-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://raw.githubusercontent.com/Horizen6/Horizen6.github.io/refs/heads/main/imageedit_1_5166642912.png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .desktop-content {
+            position: fixed;
+            top: 80px;
+            left: 80px;
+            right: 80px;
+            bottom: 80px;
+            background: rgba(17, 17, 17, 0.95);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            z-index: 50;
+        }
+        
+        .files-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 25px;
+            padding: 40px;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            z-index: 60;
+        }
+        
+        .file {
+            width: 90px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 60;
+            position: relative;
+        }
+        
+        .file-icon {
+            width: 70px;
+            height: 80px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 100%);
+            border: 1px solid #555;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+        }
+        
+        .file-icon::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 15px;
+            height: 15px;
+            background: #555;
+            border-radius: 2px;
+        }
+        
+        .file-icon::after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 5px;
+            width: 60px;
+            height: 40px;
+            background: #444;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+        
+        .file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+            word-break: break-word;
+        }
+        
+        .file:hover {
+            transform: translateY(-5px);
+        }
+        
+        .file:hover .file-icon {
+            border-color: #888;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: #2a2a2a;
+            padding: 12px 18px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .modal-content {
+            padding: 0;
+            height: calc(100% - 50px);
+            display: flex;
+        }
+        
+        .modal-left {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .modal-right {
+            width: 250px;
+            background: #2a2a2a;
+            border-left: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .entry-image {
+            width: 100%;
+            height: 200px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .info-row {
+            margin-bottom: 18px;
+            display: flex;
+        }
+        
+        .info-label {
+            width: 120px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 150;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Scanlines effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.03) 50%, 
+                rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 75;
+        }
+        
+        /* Selection highlight */
+        .file.selected .file-icon {
+            border-color: white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .file.selected .file-name {
+            color: white;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+        }
+        
+        /* Background pattern */
+        .desktop-bg {
+            position: fixed;
+            top: 80px;
+            left: 80px;
+            right: 80px;
+            bottom: 80px;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(40, 40, 40, 0.3) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(40, 40, 40, 0.3) 0%, transparent 20%);
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <!-- Startup Animation -->
+    <div class="startup-overlay" id="startupOverlay">
+        <div class="startup-bevel"></div>
+        <div class="startup-screen"></div>
+        <div class="startup-icon"></div>
+    </div>
+
+    <div class="desktop" id="desktop">
+        <div class="desktop-bg"></div>
+        <div class="desktop-content">
+            <div class="files-container" id="filesContainer">
+                <!-- Files will be generated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="overlay" id="overlay"></div>
+        
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <div class="modal-title">ENTRY DETAILS</div>
+                <button class="close-btn" id="closeBtn">✕</button>
+            </div>
+            <div class="modal-content" id="modalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="scanlines"></div>
+        <div class="bevel-frame"></div>
+    </div>
+
+    <script>
+        // Custom entries data
+        const entries = [
+            {
+                name: "Slime",
+                lifespan: "Indefinite",
+                type: "Amorphous",
+                height: "1-3 feet",
+                weight: "50-150 lbs"
+            },
+            {
+                name: "Vlag",
+                lifespan: "200-300 years",
+                type: "Energy Being",
+                height: "6-8 feet",
+                weight: "Unknown"
+            },
+            {
+                name: "Grasser",
+                lifespan: "50-70 years",
+                type: "Plant-Humanoid",
+                height: "5-6 feet",
+                weight: "180-250 lbs"
+            },
+            {
+                name: "Gazer",
+                lifespan: "500+ years",
+                type: "Psionic",
+                height: "3-4 feet (floating)",
+                weight: "80-120 lbs"
+            },
+            {
+                name: "Lerog",
+                lifespan: "80-100 years",
+                type: "Reptilian",
+                height: "7-9 feet",
+                weight: "400-600 lbs"
+            },
+            {
+                name: "Hag",
+                lifespan: "300-400 years",
+                type: "Fey",
+                height: "4-5 feet",
+                weight: "90-130 lbs"
+            },
+            {
+                name: "Arg",
+                lifespan: "150-200 years",
+                type: "Stone Being",
+                height: "6-7 feet",
+                weight: "800-1200 lbs"
+            }
+        ];
+
+        // DOM elements
+        const startupOverlay = document.getElementById('startupOverlay');
+        const desktop = document.getElementById('desktop');
+        const filesContainer = document.getElementById('filesContainer');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modalContent');
+        const overlay = document.getElementById('overlay');
+        const closeBtn = document.getElementById('closeBtn');
+
+        // Startup sequence
+        function startupSequence() {
+            // After 1 second, start showing the icon
+            setTimeout(() => {
+                // Icon animation runs for 4 seconds
+                // After 4.5 seconds total, hide startup and show desktop
+                setTimeout(() => {
+                    startupOverlay.classList.add('hidden');
+                    desktop.classList.add('visible');
+                    
+                    // Remove startup overlay completely after transition
+                    setTimeout(() => {
+                        startupOverlay.style.display = 'none';
+                    }, 1000);
+                }, 8500);
+            }, 1000);
+        }
+
+        // Function to create file elements
+        function createFiles() {
+            entries.forEach((entry, index) => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file';
+                fileElement.dataset.index = index;
+                
+                fileElement.innerHTML = `
+                    <div class="file-icon"></div>
+                    <div class="file-name">${entry.name}</div>
+                `;
+                
+                fileElement.addEventListener('click', () => {
+                    // Remove selected class from all files
+                    document.querySelectorAll('.file').forEach(file => {
+                        file.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked file
+                    fileElement.classList.add('selected');
+                    
+                    // Show modal with entry details
+                    showModal(entry);
+                });
+                
+                filesContainer.appendChild(fileElement);
+            });
+        }
+
+        // Function to show modal with entry details
+        function showModal(entry) {
+            modalContent.innerHTML = `
+                <div class="modal-left">
+                    <div class="info-row">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">${entry.name}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Life span:</span>
+                        <span class="info-value">${entry.lifespan}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Type:</span>
+                        <span class="info-value">${entry.type}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Height:</span>
+                        <span class="info-value">${entry.height}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Weight:</span>
+                        <span class="info-value">${entry.weight}</span>
+                    </div>
+                </div>
+                <div class="modal-right">
+                    <div class="entry-image">
+                        [Image of ${entry.name}]
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        // Close modal when close button is clicked
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+            
+            // Remove selected class from all files
+            document.querySelectorAll('.file').forEach(file => {
+                file.classList.remove('selected');
+            });
+        });
+
+        // Close modal when clicking outside of it
+        overlay.addEventListener('click', () => {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+            
+            // Remove selected class from all files
+            document.querySelectorAll('.file').forEach(file => {
+                file.classList.remove('selected');
+            });
+        });
+
+        // Initialize everything
+        window.addEventListener('load', () => {
+            createFiles();
+            startupSequence();
+        });
+        
+        // Handle window resize to maintain full screen
+        window.addEventListener('resize', () => {
+            // The fixed positioning and %-based sizing will automatically adjust
+        });
+    </script>
+</body>
+</html>
