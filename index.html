@@ -377,33 +377,6 @@
             z-index: 10;
         }
         
-        /* Audio controls styling */
-        .audio-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 300;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .audio-btn {
-            background: #2a2a2a;
-            border: 1px solid #555;
-            color: white;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-        
-        .audio-btn:hover {
-            background: #3a3a3a;
-        }
-        
         /* GitHub Pages specific adjustments */
         @media (max-width: 768px) {
             .desktop-content {
@@ -473,12 +446,6 @@
         
         <div class="scanlines"></div>
         <div class="bevel-frame"></div>
-        
-        <!-- Audio controls -->
-        <div class="audio-controls">
-            <button class="audio-btn" id="playSoundBtn">Play Sound</button>
-            <button class="audio-btn" id="muteSoundBtn">Mute</button>
-        </div>
     </div>
 
     <!-- Audio element for startup sound -->
@@ -550,20 +517,16 @@
         const overlay = document.getElementById('overlay');
         const closeBtn = document.getElementById('closeBtn');
         const startupSound = document.getElementById('startupSound');
-        const playSoundBtn = document.getElementById('playSoundBtn');
-        const muteSoundBtn = document.getElementById('muteSoundBtn');
 
-        // Sound state
-        let isMuted = false;
+        // Set volume to 50%
+        startupSound.volume = 0.5;
 
         // Startup sequence
         function startupSequence() {
             // After 1 second, start showing the icon and play sound
             setTimeout(() => {
-                // Play the startup sound if not muted
-                if (!isMuted) {
-                    playStartupSound();
-                }
+                // Play the startup sound
+                playStartupSound();
                 
                 // Icon animation runs for 4 seconds
                 // After 4.5 seconds total, hide startup and show desktop
@@ -584,9 +547,6 @@
             startupSound.currentTime = 0; // Reset to beginning
             startupSound.play().catch(error => {
                 console.log("Audio play failed:", error);
-                // This often happens due to browser autoplay policies
-                // We'll show a message to the user
-                alert("Note: Startup sound couldn't play automatically due to browser restrictions. Click the 'Play Sound' button to hear it.");
             });
         }
 
@@ -675,18 +635,6 @@
             document.querySelectorAll('.file').forEach(file => {
                 file.classList.remove('selected');
             });
-        });
-
-        // Play sound button
-        playSoundBtn.addEventListener('click', () => {
-            playStartupSound();
-        });
-
-        // Mute sound button
-        muteSoundBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
-            startupSound.muted = isMuted;
-            muteSoundBtn.textContent = isMuted ? 'Unmute' : 'Mute';
         });
 
         // Initialize everything
